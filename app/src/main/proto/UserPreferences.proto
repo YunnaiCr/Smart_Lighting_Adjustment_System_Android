@@ -1,0 +1,9 @@
+syntax = "proto3";
+option java_package = "com.example.lightingadjustment.proto";
+option java_multiple_files = true;
+
+message UserPreferences {
+  bool initialized = 1;
+  string adjustments = 2;
+  string options = 3;
+}

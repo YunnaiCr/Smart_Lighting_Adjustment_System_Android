@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">LightingAdjustment</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="button1">Button 1</string>
+</resources>
