@@ -10,10 +10,9 @@ import androidx.compose.runtime.*
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val manualModeSwitchState = rememberSaveable { mutableStateOf(false) }
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController) }
-        composable("third") { ThirdScreen(navController, manualModeSwitchState) }
+        composable("third") { ThirdScreen(navController) }
     }
 }

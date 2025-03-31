@@ -18,20 +18,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun ThirdScreen(navController: NavHostController, switchState: MutableState<Boolean>) {
-    var brightness by remember { mutableStateOf(0.5f) }
+fun ThirdScreen(navController: NavHostController) {
+    var brightness by remember { mutableFloatStateOf(0.5f) }
     val selectedColor = remember { mutableStateOf(Color.White) }
     val colors = listOf(Color.Black, Color.DarkGray, Color.Gray, Color.LightGray, Color.White)
     val autoMode = remember { mutableStateOf(false) }
     val manualMode = remember { mutableStateOf(false) }
     val voiceMode = remember { mutableStateOf(false) }
     val finalColor = remember { mutableStateOf(Color.White) } // MutableState<Color>
-    val finalBrightness = remember { mutableStateOf(0.5f) } // MutableState<Float>
+    val finalBrightness = remember { mutableFloatStateOf(0.5f) } // MutableState<Float>
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background5),
-            contentDescription = null,
+            contentDescription = "Main Interface",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )//set background
@@ -67,7 +67,7 @@ fun ThirdScreen(navController: NavHostController, switchState: MutableState<Bool
 
             ModeSelectionButtons { selectedMode ->
                 println("用户选择了模式: $selectedMode")
-            // write function
+            // TODO: Select to send the corresponding information to the hardware according to the mode passed.
             }
 
 
@@ -75,7 +75,7 @@ fun ThirdScreen(navController: NavHostController, switchState: MutableState<Bool
             ColorSelection(colors = colors, selectedColor = selectedColor)
 
             Spacer(modifier = Modifier.height(16.dp))
-            BrightnessControl(brightness = remember { mutableStateOf(brightness) })
+            BrightnessControl(brightness = remember { mutableFloatStateOf(brightness) })
 
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -87,10 +87,10 @@ fun ThirdScreen(navController: NavHostController, switchState: MutableState<Bool
                     onClick = {
                         // When the button is clicked, store the selected color and brightness
                         finalColor.value = selectedColor.value
-                        finalBrightness.value = brightness
+                        finalBrightness.floatValue = brightness
 
                         // Optionally, log or show a message for confirmation
-                        println("最终选择的颜色: ${finalColor.value}, 最终亮度: ${finalBrightness.value}")
+                        println("最终选择的颜色: ${finalColor.value}, 最终亮度: ${finalBrightness.floatValue}")
                     },
                     modifier = Modifier
                         .fillMaxWidth(0.8f)

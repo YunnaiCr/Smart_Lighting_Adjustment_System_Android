@@ -2,8 +2,8 @@ package com.example.lightingadjustment
 
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 import com.example.lightingadjustment.mqtt.MqttLinking
@@ -13,7 +13,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     private lateinit var mqttLinking: MqttLinking
     private lateinit var userPreferencesManager: UserPreferencesManager
 

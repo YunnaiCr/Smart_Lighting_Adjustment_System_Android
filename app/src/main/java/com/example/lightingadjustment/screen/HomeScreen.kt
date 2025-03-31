@@ -22,19 +22,15 @@ import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    val autoMode = remember { mutableStateOf(false) }
-    val manualMode = remember { mutableStateOf(false) }
-    val voiceMode = remember { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background4),
-            contentDescription = null,
+            contentDescription = "Login Interface Background",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
         Column(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -66,31 +62,26 @@ fun HomeScreen(navController: NavHostController) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("账号",
-                                    fontFamily = loadCustomFont()) }
+                    label = { Text("账号", fontFamily = loadCustomFont()) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("密码",
-                              fontFamily = loadCustomFont()) },
+                    label = { Text("密码", fontFamily = loadCustomFont()) },
                     visualTransformation = PasswordVisualTransformation()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(onClick = { navController.navigate("third") }) {
-                    Text("登录",
-                         fontFamily = loadCustomFont())
+                    Text("登录", fontFamily = loadCustomFont())
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { /* Navigate to Registration Screen */ }) {
-                    Text("注册",
-                         fontFamily = loadCustomFont())
+                    Text("注册", fontFamily = loadCustomFont())
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { (navController.context as? ComponentActivity)?.finish() }) {
-                    Text("退出",
-                         fontFamily = loadCustomFont())
+                    Text("退出", fontFamily = loadCustomFont())
                 }
             }
         }
