@@ -14,45 +14,64 @@ import kotlinx.coroutines.launch
 @Composable
 fun BrightnessControl(
     brightness: MutableState<Float>,
-    userPreferencesManager: UserPreferencesManager
+    userPreferencesManager: UserPreferencesManager,
+    flag: Boolean
 ) {
+    if (!flag) {
+        return
+    }
+
     val tag = "Data Changed"
-    val step = 0.1f
-    val steps = (1f / step).toInt() - 1
+    val step = 1f  // 步长设置为 1
+    val steps = 3  // 0到6之间有7个步长（ 1, 2, 3, 4, 5）
     val scope = rememberCoroutineScope()
 
     Text("亮度调节", fontFamily = loadCustomFont(), color = Color.White)
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Button(onClick = { if (brightness.value > 0) brightness.value = (brightness.value - step).coerceAtLeast(0f)
-                           scope.launch{userPreferencesManager.updateUserPreferences(brightness = brightness.value)}    // Store the brightness
+        // 减少亮度按钮
+        Button(onClick = {
+            if (brightness.value > 0) {
+                brightness.value = (brightness.value - step).coerceAtLeast(1f)
+                brightness.value = brightness.value.toInt().toFloat() // 确保亮度值为整数
+                scope.launch { userPreferencesManager.updateUserPreferences(brightness = brightness.value) }
+            }
         }) {
             Text("-")
         }
+
+        // 亮度调节滑动条
         Slider(
             value = brightness.value,
-            // Round the brightness value to the nearest scale value when user drags the slider
             onValueChange = { newValue ->
-                brightness.value = (newValue / step).toInt() * step
+                // 限制滑动条值为0, 1, 2, 3, 4, 5, 6
+                brightness.value = (newValue).toInt().coerceIn(1, 5).toFloat()
             },
-            // Store the brightness value when user raise finger
             onValueChangeFinished = {
                 scope.launch {
                     userPreferencesManager.updateUserPreferences(brightness = brightness.value)
                     val updateValue = userPreferencesManager.getUserPreferences("brightness")
-                    Log.d(tag, "Brightness has been changed to $updateValue")
+                    Log.d(tag, "亮度已调整为 $updateValue")
                 }
             },
-            valueRange = 0f..1f,
-            steps = steps, // 限制步长
+            valueRange = 1f..5f,
+            steps = steps, // 设置步长为6，确保只有0到6之间的数值
             modifier = Modifier.width(200.dp)
         )
-        Button(onClick = { if (brightness.value < 1) brightness.value = (brightness.value + step).coerceAtMost(1f)
-                           scope.launch{userPreferencesManager.updateUserPreferences(brightness = brightness.value)}    // Store the brightness
+
+        // 增加亮度按钮
+        Button(onClick = {
+            if (brightness.value < 5) {
+                brightness.value = (brightness.value + step).coerceAtMost(5f)
+                brightness.value = brightness.value.toInt().toFloat() // 确保亮度值为整数
+                scope.launch { userPreferencesManager.updateUserPreferences(brightness = brightness.value) }
+            }
         }) {
             Text("+")
         }
     }
 }
+
+
 

@@ -17,17 +17,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import com.example.lightingadjustment.datamanagement.UserPreferencesManager
+import androidx.compose.ui.res.colorResource
+
 
 @Composable
 fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPreferencesManager) {
     var brightness by remember { mutableFloatStateOf(0.5f) }
     val selectedColor = remember { mutableStateOf(Color.White) }
-    val colors = listOf(Color.Black, Color.DarkGray, Color.Gray, Color.LightGray, Color.White)
+
+    val colors = listOf(
+        colorResource(R.color.night),  // 无需 context
+        colorResource(R.color.warm),
+        colorResource(R.color.white)
+    )
+
     val autoMode = remember { mutableStateOf(false) }
     val manualMode = remember { mutableStateOf(false) }
     val voiceMode = remember { mutableStateOf(false) }
-    val finalColor = remember { mutableStateOf(Color.White) } // MutableState<Color>
-    val finalBrightness = remember { mutableFloatStateOf(0.5f) } // MutableState<Float>
+    val flag = remember { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -51,7 +58,7 @@ fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPr
                 contentAlignment = Alignment.TopCenter
             ) {
                 Text(
-                    text = "自动调节模式",
+                    text = "恒光",
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = loadCustomFont(),
@@ -66,39 +73,22 @@ fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPr
             }
 
 
-            ModeSelectionButtons { selectedMode ->
+            ModeSelectionButtons(onModeSelected = { selectedMode ->
                 println("用户选择了模式: $selectedMode")
-            // TODO: Select to send the corresponding information to the hardware according to the mode passed.
-            }
+                // TODO: 根据模式选择发送相应信息到硬件
+            }, flag = flag.value)
 
 
             Spacer(modifier = Modifier.height(16.dp))//Set interval
-            ColorSelection(colors = colors, selectedColor = selectedColor)
+            ColorSelection(colors = colors, selectedColor = selectedColor,flag = flag.value)
 
             Spacer(modifier = Modifier.height(16.dp))
-            BrightnessControl(brightness = remember { mutableFloatStateOf(brightness)}, userPreferencesManager)
-
-
-            Spacer(modifier = Modifier.height(32.dp))
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(
-                    onClick = {
-                        // When the button is clicked, store the selected color and brightness
-                        finalColor.value = selectedColor.value
-                        finalBrightness.floatValue = brightness
-
-                        // Optionally, log or show a message for confirmation
-                        println("最终选择的颜色: ${finalColor.value}, 最终亮度: ${finalBrightness.floatValue}")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .padding(8.dp)
-                ) {
-                    Text("确认调节", fontFamily = loadCustomFont())
-                }
+            BrightnessControl(brightness = remember { mutableFloatStateOf(brightness)}, userPreferencesManager,flag = flag.value)
+            // 根据模式选择显示内容
+            if (manualMode.value) {
+                flag.value = true
+            } else if (autoMode.value || voiceMode.value) {
+                flag.value = false
             }
         }
     }

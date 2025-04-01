@@ -20,7 +20,16 @@ fun ModeSelectionMenu(
     manualMode: MutableState<Boolean>,
     voiceMode: MutableState<Boolean>
 ) {
+
+    // 设置初始状态为手动模式
     var expanded by remember { mutableStateOf(false) }
+
+    // 默认初始状态
+    LaunchedEffect(Unit) {
+        autoMode.value = false
+        manualMode.value = true // 手动模式为初始状态
+        voiceMode.value = false
+    }
 
     Box(
         modifier = Modifier.fillMaxWidth(),
