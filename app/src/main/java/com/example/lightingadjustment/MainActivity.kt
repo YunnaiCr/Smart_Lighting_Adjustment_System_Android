@@ -19,19 +19,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            LightingAdjustmentTheme {
-                AppNavigation()
-            }
-        }
 
         // Initialize data manager
         userPreferencesManager = UserPreferencesManager(this)
 
+        setContent {
+            LightingAdjustmentTheme {
+                AppNavigation(userPreferencesManager, )
+            }
+        }
+
         // To initialize uninitialized data
         lifecycleScope.launch {
             if(!userPreferencesManager.isInitialized()){
-                userPreferencesManager.updateUserPreferences(initialized = true)
+                userPreferencesManager.initialize()
             }
         }
 

@@ -16,9 +16,10 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
+import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 
 @Composable
-fun ThirdScreen(navController: NavHostController) {
+fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPreferencesManager) {
     var brightness by remember { mutableFloatStateOf(0.5f) }
     val selectedColor = remember { mutableStateOf(Color.White) }
     val colors = listOf(Color.Black, Color.DarkGray, Color.Gray, Color.LightGray, Color.White)
@@ -75,7 +76,7 @@ fun ThirdScreen(navController: NavHostController) {
             ColorSelection(colors = colors, selectedColor = selectedColor)
 
             Spacer(modifier = Modifier.height(16.dp))
-            BrightnessControl(brightness = remember { mutableFloatStateOf(brightness) })
+            BrightnessControl(brightness = remember { mutableFloatStateOf(brightness)}, userPreferencesManager)
 
 
             Spacer(modifier = Modifier.height(32.dp))

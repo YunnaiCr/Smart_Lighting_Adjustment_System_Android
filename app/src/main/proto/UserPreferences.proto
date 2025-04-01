@@ -4,6 +4,9 @@ option java_multiple_files = true;
 
 message UserPreferences {
   bool initialized = 1;
-  string adjustments = 2;
-  string options = 3;
+  float brightness = 2;
+  int32 red = 3;
+  int32 green = 4;
+  int32 blue = 5;
+  string operation_mode = 6;
 }

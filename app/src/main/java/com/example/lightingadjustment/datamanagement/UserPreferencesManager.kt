@@ -15,26 +15,45 @@ private val Context.userPreferencesDataStore: DataStore<UserPreferences> by data
 class UserPreferencesManager(private val context: Context) {
     private val dataStore = context.userPreferencesDataStore
 
+    suspend fun initialize() {
+        dataStore.updateData { preferences ->
+            preferences.toBuilder()
+                .setBrightness(0.0f) // 设置默认值
+                .build()
+        }
+    }
+
     // Use one or multiple String field(s) to get the data of Map type in preferences
     suspend fun getUserPreferences(vararg fields: String): Map<String, Any?> {
         val preferences = dataStore.data.first()
         return fields.mapNotNull { field ->
             when (field) {
                 "initialized" -> "initialized" to preferences.initialized
-                "adjustments" -> "adjustments" to preferences.adjustments
-                "options" -> "options" to preferences.options
+                "brightness" -> "brightness" to preferences.brightness
+                "red" -> "red" to preferences.red
+                "green" -> "green" to preferences.green
+                "blue" -> "blue" to preferences.blue
+                "operationMode" -> "OperationMode" to preferences.operationMode
                 else -> null
             }
         }.toMap()
     }
 
     // Update the data in preferences, which can be optionally filled in
-    suspend fun updateUserPreferences(initialized: Boolean? = null, adjustments: String? = null, options: String? = null) {
+    suspend fun updateUserPreferences(initialized: Boolean? = null,
+                                      brightness: Float? = null,
+                                      red: Int? = null,
+                                      green: Int? = null,
+                                      blue: Int? = null,
+                                      operationMode: String? = null) {
         dataStore.updateData { preferences ->
             preferences.toBuilder().apply {
                 initialized?.let{setInitialized(initialized)}
-                adjustments?.let{setAdjustments(adjustments)}
-                options?.let{setOptions(options)}
+                brightness?.let{setBrightness(brightness)}
+                red?.let{setRed(red)}
+                green?.let{setGreen(green)}
+                blue?.let{setBlue(blue)}
+                operationMode?.let{setOperationMode(operationMode)}
             }.build()
         }
     }
