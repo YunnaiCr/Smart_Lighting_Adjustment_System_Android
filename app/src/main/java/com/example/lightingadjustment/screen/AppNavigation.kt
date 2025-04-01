@@ -1,11 +1,9 @@
 package com.example.lightingadjustment.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.*
 import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 
 //set screen

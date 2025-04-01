@@ -12,7 +12,7 @@ private val Context.userPreferencesDataStore: DataStore<UserPreferences> by data
 )
 
 // A class convenient for data management
-class UserPreferencesManager(private val context: Context) {
+class UserPreferencesManager(context: Context) {
     private val dataStore = context.userPreferencesDataStore
 
     suspend fun initialize() {
