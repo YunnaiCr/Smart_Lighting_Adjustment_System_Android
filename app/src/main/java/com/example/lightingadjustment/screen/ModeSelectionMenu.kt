@@ -10,19 +10,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.ui.text.font.FontWeight
-
-
+import com.example.lightingadjustment.datamanagement.UserPreferencesManager
+import com.example.lightingadjustment.mqtt.MqttLinking
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 
 
 @Composable
 fun ModeSelectionMenu(
     autoMode: MutableState<Boolean>,
     manualMode: MutableState<Boolean>,
-    voiceMode: MutableState<Boolean>
+    voiceMode: MutableState<Boolean>,
+    userPreferencesManager: UserPreferencesManager,
+    mqttLinking: MqttLinking
 ) {
 
     // 设置初始状态为手动模式
     var expanded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val mutex = remember { Mutex() }
 
     // 默认初始状态
     LaunchedEffect(Unit) {
@@ -39,7 +45,7 @@ fun ModeSelectionMenu(
             Icon(Icons.Default.MoreVert, contentDescription = "模式选择")
         }
 
-        Box() {
+        Box {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
@@ -49,6 +55,7 @@ fun ModeSelectionMenu(
                         autoMode.value = true
                         manualMode.value = false
                         voiceMode.value = false
+                        scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "operationMode", "autoMode") }
                     }
                 }
                 ModeSwitchItem("手动模式", manualMode) {
@@ -56,6 +63,7 @@ fun ModeSelectionMenu(
                         autoMode.value = false
                         manualMode.value = true
                         voiceMode.value = false
+                        scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "operationMode", "manualMode") }
                     }
                 }
                 ModeSwitchItem("语音模式", voiceMode) {
@@ -63,6 +71,7 @@ fun ModeSelectionMenu(
                         autoMode.value = false
                         manualMode.value = false
                         voiceMode.value = true
+                        scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "operationMode", "voiceMode") }
                     }
                 }
             }

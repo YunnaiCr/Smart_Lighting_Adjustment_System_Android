@@ -11,14 +11,17 @@ import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.security.cert.CertificateFactory
 import javax.net.ssl.SSLSocketFactory
 import com.example.lightingadjustment.R
+import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.sync.withLock
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.MqttException
 import java.security.KeyStore
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
+import kotlinx.coroutines.sync.*
 
 class MqttLinking(context: Context) {
     private val broker = "ssl://jfe2a84f.ala.cn-hangzhou.emqxsl.cn:8883"
@@ -29,6 +32,8 @@ class MqttLinking(context: Context) {
 
     private val pendingSubscriptions = mutableSetOf<String>()
     private val subscriptionCallbacks = mutableMapOf<String, (String) -> Unit>()
+
+
 
     // Create a MQTT carrier
     private val mqttClient: MqttAndroidClient = MqttAndroidClient(context, broker, clientID).apply {
@@ -108,6 +113,54 @@ class MqttLinking(context: Context) {
             qos = 1
         }
         mqttClient.publish(topic, message)
+    }
+
+    // Send data by any field
+    suspend fun sendData(vararg fields: String, userPreferencesManager: UserPreferencesManager) {
+        val data = userPreferencesManager.getUserPreferences(*fields)
+        val jsonData = Gson().toJson(data)
+        sendMessage("bedroom/lighting", jsonData)
+    }
+
+    // Update and send the data (one field temporary)
+    suspend fun updateAndSend (mutex: Mutex, userPreferencesManager: UserPreferencesManager, field: String, data: Any? ) {
+            when (field) {
+                "brightness" -> {
+                    var updateValue = data as? Float
+                    mutex.withLock {
+                        userPreferencesManager.updateUserPreferences(brightness = updateValue)
+                        sendData("brightness", userPreferencesManager = userPreferencesManager)
+                    }
+                    Log.d("Brightness Control", "亮度已调整为 $updateValue")
+                }
+
+                "sceneMode" -> {
+                    var updateValue = data as? String
+                    mutex.withLock {
+                        userPreferencesManager.updateUserPreferences(sceneMode = updateValue)
+                        sendData("sceneMode", userPreferencesManager = userPreferencesManager)
+                    }
+                    Log.d("Scene Mode Selection", "情景模式已调整为 $updateValue")
+                }
+
+                "color" -> {
+                    var updateValue = data as? String
+                    mutex.withLock {
+                        userPreferencesManager.updateUserPreferences(color = updateValue)
+                        sendData("color", userPreferencesManager = userPreferencesManager)
+                    }
+                    Log.d("Color Selection", "颜色已调整为 $updateValue")
+                }
+
+                "operationMode" -> {
+                    var updateValue = data as? String
+                    mutex.withLock {
+                        userPreferencesManager.updateUserPreferences(operationMode = updateValue)
+                        sendData("color", userPreferencesManager = userPreferencesManager)
+                    }
+                    Log.d("Operation Mode Selection", "操作模式已调整为 $updateValue")
+                }
+            }
     }
 
     // MQTT | Subscribe the required topic and add the failed subscriptions to pending list

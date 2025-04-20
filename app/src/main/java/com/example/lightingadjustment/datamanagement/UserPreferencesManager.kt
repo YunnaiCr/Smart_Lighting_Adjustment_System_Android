@@ -30,10 +30,9 @@ class UserPreferencesManager(context: Context) {
             when (field) {
                 "initialized" -> "initialized" to preferences.initialized
                 "brightness" -> "brightness" to preferences.brightness
-                "red" -> "red" to preferences.red
-                "green" -> "green" to preferences.green
-                "blue" -> "blue" to preferences.blue
-                "operationMode" -> "OperationMode" to preferences.operationMode
+                "color" -> "color" to preferences.color
+                "sceneMode" -> "sceneMode" to preferences.sceneMode
+                "operationMode" -> "operationMode" to preferences.operationMode
                 else -> null
             }
         }.toMap()
@@ -42,18 +41,16 @@ class UserPreferencesManager(context: Context) {
     // Update the data in preferences, which can be optionally filled in
     suspend fun updateUserPreferences(initialized: Boolean? = null,
                                       brightness: Float? = null,
-                                      red: Int? = null,
-                                      green: Int? = null,
-                                      blue: Int? = null,
+                                      color: String? = null,
+                                      sceneMode: String? = null,
                                       operationMode: String? = null) {
         dataStore.updateData { preferences ->
             preferences.toBuilder().apply {
-                initialized?.let{setInitialized(initialized)}
-                brightness?.let{setBrightness(brightness)}
-                red?.let{setRed(red)}
-                green?.let{setGreen(green)}
-                blue?.let{setBlue(blue)}
-                operationMode?.let{setOperationMode(operationMode)}
+                initialized?.let{ setInitialized(initialized) }
+                brightness?.let{ setBrightness(brightness) }
+                color?.let { setColor(color) }
+                sceneMode?. let{ setSceneMode(sceneMode) }
+                operationMode?.let{ setOperationMode(operationMode) }
             }.build()
         }
     }

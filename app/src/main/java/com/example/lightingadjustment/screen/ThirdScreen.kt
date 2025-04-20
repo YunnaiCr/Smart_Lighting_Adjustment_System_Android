@@ -6,7 +6,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import androidx.compose.ui.Alignment
 import com.example.lightingadjustment.R
 import androidx.compose.foundation.Image
@@ -18,15 +17,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 import androidx.compose.ui.res.colorResource
+import com.example.lightingadjustment.mqtt.MqttLinking
 
 
 @Composable
-fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPreferencesManager) {
+fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
+                mqttLinking: MqttLinking) {
     var brightness by remember { mutableFloatStateOf(0.5f) }
     val selectedColor = remember { mutableStateOf(Color.White) }
 
     val colors = listOf(
-        colorResource(R.color.night),  // 无需 context
+        colorResource(R.color.night),
         colorResource(R.color.warm),
         colorResource(R.color.white)
     )
@@ -35,6 +36,18 @@ fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPr
     val manualMode = remember { mutableStateOf(false) }
     val voiceMode = remember { mutableStateOf(false) }
     val flag = remember { mutableStateOf(true) }
+
+    // Disable control in non manual mode
+    LaunchedEffect(manualMode.value) {
+        if (manualMode.value) {
+            flag.value = true
+
+            brightness = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
+
+        } else {
+            flag.value = false
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -68,28 +81,26 @@ fun ThirdScreen(navController: NavHostController, userPreferencesManager: UserPr
                 ModeSelectionMenu(
                     autoMode = autoMode,
                     manualMode = manualMode,
-                    voiceMode = voiceMode
+                    voiceMode = voiceMode,
+                    userPreferencesManager, mqttLinking
                 )
             }
 
-
-            ModeSelectionButtons(onModeSelected = { selectedMode ->
-                println("用户选择了模式: $selectedMode")
-                // TODO: 根据模式选择发送相应信息到硬件
-            }, flag = flag.value)
-
+            ModeSelectionButtons(flag.value, userPreferencesManager, mqttLinking)
 
             Spacer(modifier = Modifier.height(16.dp))//Set interval
-            ColorSelection(colors = colors, selectedColor = selectedColor,flag = flag.value)
+            ColorSelection(
+                colors = colors,
+                selectedColor = selectedColor,
+                flag = flag.value,
+                userPreferencesManager, mqttLinking)
 
             Spacer(modifier = Modifier.height(16.dp))
-            BrightnessControl(brightness = remember { mutableFloatStateOf(brightness)}, userPreferencesManager,flag = flag.value)
-            // 根据模式选择显示内容
-            if (manualMode.value) {
-                flag.value = true
-            } else if (autoMode.value || voiceMode.value) {
-                flag.value = false
-            }
+            BrightnessControl(
+                brightness = remember { mutableFloatStateOf(brightness)},
+                userPreferencesManager,
+                mqttLinking,
+                flag = flag.value)
         }
     }
 }

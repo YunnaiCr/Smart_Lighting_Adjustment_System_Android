@@ -9,7 +9,6 @@ import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 import com.example.lightingadjustment.mqtt.MqttLinking
 import com.example.lightingadjustment.ui.theme.LightingAdjustmentTheme
 import com.example.lightingadjustment.screen.AppNavigation
-import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 
@@ -25,7 +24,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             LightingAdjustmentTheme {
-                AppNavigation(userPreferencesManager, )
+                AppNavigation(userPreferencesManager, mqttLinking)
             }
         }
 
@@ -39,7 +38,7 @@ class MainActivity : ComponentActivity() {
         mqttLinking = MqttLinking(this)
         mqttLinking.connect(this) {
             lifecycleScope.launch {
-                sendData("initialized")
+                mqttLinking.sendData("initialized", userPreferencesManager = userPreferencesManager)
                 Log.d("test", "test the linking.")
             }
         }
@@ -47,14 +46,6 @@ class MainActivity : ComponentActivity() {
         mqttLinking.subscribe("bedroom/lighting") { message ->
             mqttLinking.handleReceivedData(message)
         }
-
-    }
-
-    // Send data by one field
-    private suspend fun sendData(field: String) {
-        val data = userPreferencesManager.getUserPreferences(field)
-        val jsonData = Gson().toJson(data)
-        mqttLinking.sendMessage("bedroom/lighting", jsonData)
     }
 
     override fun onDestroy() {
