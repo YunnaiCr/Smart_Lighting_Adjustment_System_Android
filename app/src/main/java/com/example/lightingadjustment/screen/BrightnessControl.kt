@@ -1,6 +1,5 @@
 package com.example.lightingadjustment.screen
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,7 +23,6 @@ fun BrightnessControl(
         return
     }
 
-    val tag = "Brightness Control"
     val step = 1f  // 步长设置为 1
     val steps = 3  // 0到6之间有7个步长（ 1, 2, 3, 4, 5）
 
