@@ -42,7 +42,6 @@ class MqttLinking(context: Context) {
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 val payload = message?.payload?.takeIf { it.isNotEmpty() }?.toString(Charsets.UTF_8)?: ""
                 Log.d(tag, "Received: $payload")
-                handleReceivedData(payload)
                 topic?.let { sub -> subscriptionCallbacks[sub]?.invoke(payload) }
             }
 
@@ -200,9 +199,17 @@ class MqttLinking(context: Context) {
     }
 
     // Convert received Json data to Map
-    fun handleReceivedData(message: String) {
+    suspend fun handleReceivedData(message: String, userPreferencesManager: UserPreferencesManager) {
         val type = object : TypeToken<Map<String, Any>>() {}.type
         val data = Gson().fromJson<Map<String, Any>>(message, type)
-        Log.d("MQTT", "Json to Map, Handled data: $data")
+        Log.d(tag, "Json to Map, Handled data: $data")
+        for ((key, value) in data) {
+            when (key) {
+                "brightness" -> userPreferencesManager.updateUserPreferences(brightness = value as Float)
+                "color" -> userPreferencesManager.updateUserPreferences(color = value as String)
+                "sceneMode" -> userPreferencesManager.updateUserPreferences(sceneMode = value as String)
+                "operationMode" -> userPreferencesManager.updateUserPreferences(operationMode = value as String)
+            }
+        }
     }
 }
