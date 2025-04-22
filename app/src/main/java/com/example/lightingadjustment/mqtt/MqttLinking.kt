@@ -155,7 +155,7 @@ class MqttLinking(context: Context) {
                     var updateValue = data as? String
                     mutex.withLock {
                         userPreferencesManager.updateUserPreferences(operationMode = updateValue)
-                        sendData("color", userPreferencesManager = userPreferencesManager)
+                        sendData("operationMode", userPreferencesManager = userPreferencesManager)
                     }
                     Log.d("Operation Mode Selection", "操作模式已调整为 $updateValue")
                 }
@@ -205,7 +205,7 @@ class MqttLinking(context: Context) {
         Log.d(tag, "Json to Map, Handled data: $data")
         for ((key, value) in data) {
             when (key) {
-                "brightness" -> userPreferencesManager.updateUserPreferences(brightness = value as Float)
+                "brightness" -> userPreferencesManager.updateUserPreferences(brightness = (value as Double).toFloat())
                 "color" -> userPreferencesManager.updateUserPreferences(color = value as String)
                 "sceneMode" -> userPreferencesManager.updateUserPreferences(sceneMode = value as String)
                 "operationMode" -> userPreferencesManager.updateUserPreferences(operationMode = value as String)
