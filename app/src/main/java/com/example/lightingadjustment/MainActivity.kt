@@ -19,8 +19,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize data manager
+        // Initialize data manager and MQTT linking
         userPreferencesManager = UserPreferencesManager(this)
+        mqttLinking = MqttLinking(this)
 
         setContent {
             LightingAdjustmentTheme {
@@ -35,16 +36,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        mqttLinking = MqttLinking(this)
-        mqttLinking.connect(this) {
-            lifecycleScope.launch {
-                mqttLinking.sendData("initialized", userPreferencesManager = userPreferencesManager)
-                Log.d("test", "test the linking.")
-            }
-        }
+        mqttLinking.connect(this) {}
 
         mqttLinking.subscribe("bedroom/lighting") { message ->
             lifecycleScope.launch { mqttLinking.handleReceivedData(message, userPreferencesManager) }
+        }
+
+        lifecycleScope.launch {
+            mqttLinking.sendData("initialized", userPreferencesManager = userPreferencesManager)
+            Log.d("test", "test the linking.")
         }
     }
 

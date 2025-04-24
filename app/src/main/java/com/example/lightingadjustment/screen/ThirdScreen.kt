@@ -23,7 +23,7 @@ import com.example.lightingadjustment.mqtt.MqttLinking
 @Composable
 fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
                 mqttLinking: MqttLinking) {
-    var brightness by remember { mutableFloatStateOf(0.5f) }
+    var brightness by remember { mutableFloatStateOf(1.0f) }
     val selectedColor = remember { mutableStateOf(Color.White) }
 
     val colors = listOf(

@@ -16,7 +16,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.sync.withLock
 import org.eclipse.paho.android.service.MqttAndroidClient
-import org.eclipse.paho.client.mqttv3.MqttException
 import java.security.KeyStore
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
@@ -31,7 +30,9 @@ class MqttLinking(context: Context) {
     private val tag = "MQTT"
 
     private val pendingSubscriptions = mutableSetOf<String>()
+    private val pendingMessages = mutableMapOf<String, MutableList<String>>()
     private val subscriptionCallbacks = mutableMapOf<String, (String) -> Unit>()
+    private val isSubscribed = mutableMapOf<String, Boolean>()
 
 
 
@@ -108,10 +109,22 @@ class MqttLinking(context: Context) {
 
     // MQTT | Send message to the corresponding topic subscriber
     fun sendMessage(topic: String, payload: String) {
-        val message = MqttMessage(payload.toByteArray()).apply {
-            qos = 1
+        if (isSubscribed[topic] == true) {
+            val message = MqttMessage(payload.toByteArray()).apply { qos = 1 }
+            mqttClient.publish(topic, message)
+        } else {
+            val queue = pendingMessages.getOrPut(topic) { mutableListOf() }
+            queue.add(payload)
         }
-        mqttClient.publish(topic, message)
+    }
+
+    // MQTT | Resolve pending messages
+    fun resolvePendingMessages (topic: String) {
+        val messages = pendingMessages[topic] ?: return
+        messages.forEach { payload ->
+            sendMessage(topic, payload)
+        }
+        pendingMessages.remove(topic)
     }
 
     // Send data by any field
@@ -121,62 +134,26 @@ class MqttLinking(context: Context) {
         sendMessage("bedroom/lighting", jsonData)
     }
 
-    // Update and send the data (one field temporary)
-    suspend fun updateAndSend (mutex: Mutex, userPreferencesManager: UserPreferencesManager, field: String, data: Any? ) {
-            when (field) {
-                "brightness" -> {
-                    var updateValue = data as? Float
-                    mutex.withLock {
-                        userPreferencesManager.updateUserPreferences(brightness = updateValue)
-                        sendData("brightness", userPreferencesManager = userPreferencesManager)
-                    }
-                    Log.d("Brightness Control", "亮度已调整为 $updateValue")
-                }
-
-                "sceneMode" -> {
-                    var updateValue = data as? String
-                    mutex.withLock {
-                        userPreferencesManager.updateUserPreferences(sceneMode = updateValue)
-                        sendData("sceneMode", userPreferencesManager = userPreferencesManager)
-                    }
-                    Log.d("Scene Mode Selection", "情景模式已调整为 $updateValue")
-                }
-
-                "color" -> {
-                    var updateValue = data as? String
-                    mutex.withLock {
-                        userPreferencesManager.updateUserPreferences(color = updateValue)
-                        sendData("color", userPreferencesManager = userPreferencesManager)
-                    }
-                    Log.d("Color Selection", "颜色已调整为 $updateValue")
-                }
-
-                "operationMode" -> {
-                    var updateValue = data as? String
-                    mutex.withLock {
-                        userPreferencesManager.updateUserPreferences(operationMode = updateValue)
-                        sendData("operationMode", userPreferencesManager = userPreferencesManager)
-                    }
-                    Log.d("Operation Mode Selection", "操作模式已调整为 $updateValue")
-                }
-            }
-    }
-
     // MQTT | Subscribe the required topic and add the failed subscriptions to pending list
-    fun subscribe(topic: String, qos: Int = 1, callback: (String) -> Unit) {
+    fun subscribe(topic: String, callback: (String) -> Unit) {
         subscriptionCallbacks[topic] = callback
 
         if (mqttClient.isConnected) {
-            try {
-                mqttClient.subscribe(topic, qos)
-            } catch (e: MqttException) {
-                Log.e(tag, "Failed to subscribe to $topic: ${e.message}")
-                pendingSubscriptions.add(topic)
-            }
-        }
-        else {
-            Log.w(tag, "MQTT not connected yet, adding $topic to pending list")
-            pendingSubscriptions.add(topic)
+            mqttClient.subscribe(topic, 1, null, object : IMqttActionListener {
+                override fun onSuccess(asyncActionToken: IMqttToken?) {
+                    Log.d(tag, "Successfully subscribed to $topic")
+                    isSubscribed[topic] = true
+                    resolvePendingMessages(topic)
+                    }
+
+                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                    Log.e(tag, "Failed to subscribe to $topic: $exception")
+                    pendingSubscriptions.add(topic)
+                }
+            })
+        } else {
+        Log.w(tag, "MQTT not connected yet, adding $topic to pending list")
+        pendingSubscriptions.add(topic)
         }
     }
 
@@ -187,13 +164,18 @@ class MqttLinking(context: Context) {
             val iterator = pendingSubscriptions.iterator()
             while (iterator.hasNext()) {
                 val topic = iterator.next()
-                try {
-                    mqttClient.subscribe(topic, 1)
-                    Log.d(tag, "Successfully subscribed to $topic")
-                    iterator.remove()
-                } catch (e: MqttException) {
-                    Log.e(tag, "Retry failed for $topic: ${e.message}")
-                }
+                mqttClient.subscribe(topic, 1, null, object : IMqttActionListener {
+                    override fun onSuccess(asyncActionToken: IMqttToken?) {
+                        Log.d(tag, "Successfully subscribed to $topic")
+                        isSubscribed[topic] = true
+                        resolvePendingMessages(topic)
+                        iterator.remove()
+                    }
+
+                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                            Log.e(tag, "Retry failed for $topic: $exception")
+                        }
+                    })
             }
         }
     }
@@ -209,6 +191,47 @@ class MqttLinking(context: Context) {
                 "color" -> userPreferencesManager.updateUserPreferences(color = value as String)
                 "sceneMode" -> userPreferencesManager.updateUserPreferences(sceneMode = value as String)
                 "operationMode" -> userPreferencesManager.updateUserPreferences(operationMode = value as String)
+            }
+        }
+    }
+
+    // Update and send the data (one field temporary)
+    suspend fun updateAndSend (mutex: Mutex, userPreferencesManager: UserPreferencesManager, field: String, data: Any? ) {
+        when (field) {
+            "brightness" -> {
+                var updateValue = data as? Float
+                mutex.withLock {
+                    userPreferencesManager.updateUserPreferences(brightness = updateValue)
+                    sendData("brightness", userPreferencesManager = userPreferencesManager)
+                }
+                Log.d("Brightness Control", "亮度已调整为 $updateValue")
+            }
+
+            "sceneMode" -> {
+                var updateValue = data as? String
+                mutex.withLock {
+                    userPreferencesManager.updateUserPreferences(sceneMode = updateValue)
+                    sendData("sceneMode", userPreferencesManager = userPreferencesManager)
+                }
+                Log.d("Scene Mode Selection", "情景模式已调整为 $updateValue")
+            }
+
+            "color" -> {
+                var updateValue = data as? String
+                mutex.withLock {
+                    userPreferencesManager.updateUserPreferences(color = updateValue)
+                    sendData("color", userPreferencesManager = userPreferencesManager)
+                }
+                Log.d("Color Selection", "颜色已调整为 $updateValue")
+            }
+
+            "operationMode" -> {
+                var updateValue = data as? String
+                mutex.withLock {
+                    userPreferencesManager.updateUserPreferences(operationMode = updateValue)
+                    sendData("operationMode", userPreferencesManager = userPreferencesManager)
+                }
+                Log.d("Operation Mode Selection", "操作模式已调整为 $updateValue")
             }
         }
     }

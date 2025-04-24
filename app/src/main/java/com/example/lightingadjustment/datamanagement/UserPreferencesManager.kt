@@ -18,7 +18,10 @@ class UserPreferencesManager(context: Context) {
     suspend fun initialize() {
         dataStore.updateData { preferences ->
             preferences.toBuilder()
-                .setBrightness(0.0f) // 设置默认值
+                .setBrightness(2.0f)
+                .setColor("white")
+                .setOperationMode("manualMode")
+                .setInitialized(true)
                 .build()
         }
     }
