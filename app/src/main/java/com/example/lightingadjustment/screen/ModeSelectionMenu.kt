@@ -24,18 +24,9 @@ fun ModeSelectionMenu(
     userPreferencesManager: UserPreferencesManager,
     mqttLinking: MqttLinking
 ) {
-
-    // 设置初始状态为手动模式
     var expanded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val mutex = remember { Mutex() }
-
-    // 默认初始状态
-    LaunchedEffect(Unit) {
-        autoMode.value = false
-        manualMode.value = true // 手动模式为初始状态
-        voiceMode.value = false
-    }
 
     Box(
         modifier = Modifier.fillMaxWidth(),

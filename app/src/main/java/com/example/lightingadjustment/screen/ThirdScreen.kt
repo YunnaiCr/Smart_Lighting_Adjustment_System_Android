@@ -23,8 +23,9 @@ import com.example.lightingadjustment.mqtt.MqttLinking
 @Composable
 fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
                 mqttLinking: MqttLinking) {
-    var brightness by remember { mutableFloatStateOf(1.0f) }
-    val selectedColor = remember { mutableStateOf(Color.White) }
+    var brightness = remember { mutableFloatStateOf(1.0f) }
+    var selectedMode = remember { mutableStateOf<String?>(null) }
+    var selectedColor = remember { mutableStateOf(Color.White) }
 
     val colors = listOf(
         colorResource(R.color.night),
@@ -35,15 +36,31 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
     val autoMode = remember { mutableStateOf(false) }
     val manualMode = remember { mutableStateOf(false) }
     val voiceMode = remember { mutableStateOf(false) }
-    val flag = remember { mutableStateOf(true) }
+    val flag = remember { mutableStateOf(false) }
+
+    // Retrieve configuration settings when the page is launched
+    LaunchedEffect(Unit) {
+        brightness.floatValue = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
+        selectedColor.value = when (userPreferencesManager.getUserPreferences("color")["color"] as String) {
+            "night" -> colors[0]
+            "warm" -> colors[1]
+            "white" -> colors[2]
+            else -> colors[2]
+        }
+        when (userPreferencesManager.getUserPreferences("operationMode")["operationMode"] as String) {
+            "autoMode" -> { autoMode.value = true; manualMode.value = false; voiceMode.value = false }
+            "manualMode" -> { autoMode.value = false; manualMode.value = true; voiceMode.value = false; flag.value = true }
+            "voiceMode" -> { autoMode.value = false; manualMode.value = false; voiceMode.value = true }
+            else -> { autoMode.value = false; manualMode.value = true; voiceMode.value = false; flag.value = true }
+        }
+        selectedMode.value = userPreferencesManager.getUserPreferences("sceneMode")["sceneMode"] as String
+    }
 
     // Disable control in non manual mode
     LaunchedEffect(manualMode.value) {
         if (manualMode.value) {
             flag.value = true
-
-            brightness = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
-
+            brightness.floatValue = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
         } else {
             flag.value = false
         }
@@ -86,7 +103,7 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
                 )
             }
 
-            ModeSelectionButtons(flag.value, userPreferencesManager, mqttLinking)
+            ModeSelectionButtons(flag.value, userPreferencesManager, mqttLinking, selectedMode)
 
             Spacer(modifier = Modifier.height(16.dp))//Set interval
             ColorSelection(
@@ -97,7 +114,7 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
 
             Spacer(modifier = Modifier.height(16.dp))
             BrightnessControl(
-                brightness = remember { mutableFloatStateOf(brightness)},
+                brightness = brightness,
                 userPreferencesManager,
                 mqttLinking,
                 flag = flag.value)
