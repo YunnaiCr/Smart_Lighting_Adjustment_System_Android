@@ -37,7 +37,8 @@ fun HomeScreen(navController: NavHostController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.DarkGray),
+                    .background(Color.DarkGray)
+                    .statusBarsPadding(),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Text(text = "恒光",

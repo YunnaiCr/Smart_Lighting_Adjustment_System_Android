@@ -18,7 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 import androidx.compose.ui.res.colorResource
 import com.example.lightingadjustment.mqtt.MqttLinking
-
+import com.google.accompanist.pager.*
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 
 @Composable
 fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
@@ -37,6 +40,9 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
     val manualMode = remember { mutableStateOf(false) }
     val voiceMode = remember { mutableStateOf(false) }
     val flag = remember { mutableStateOf(false) }
+
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
 
     // Retrieve configuration settings when the page is launched
     LaunchedEffect(Unit) {
@@ -80,11 +86,12 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
-        )  {
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.DarkGray),
+                    .background(Color.DarkGray)
+                    .statusBarsPadding(),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Text(
@@ -103,21 +110,64 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
                 )
             }
 
-            ModeSelectionButtons(flag.value, userPreferencesManager, mqttLinking, selectedMode)
+            // Tab buttons
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color.LightGray,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
+                listOf("模式", "调节").forEachIndexed { index, title ->
+                    Tab(
+                        text = { Text(title) },
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        }
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))//Set interval
-            ColorSelection(
-                colors = colors,
-                selectedColor = selectedColor,
-                flag = flag.value,
-                userPreferencesManager, mqttLinking)
+            // Pager: Page 0 = ModeSelectionButtons，Page 1 = ColorSelection + BrightnessControl
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        ModeSelectionButtons(
+                            flag.value,
+                            userPreferencesManager,
+                            mqttLinking,
+                            selectedMode
+                        )
+                    }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            BrightnessControl(
-                brightness = brightness,
-                userPreferencesManager,
-                mqttLinking,
-                flag = flag.value)
+                    1 -> {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            ColorSelection(
+                                colors = colors,
+                                selectedColor = selectedColor,
+                                flag = flag.value,
+                                userPreferencesManager,
+                                mqttLinking
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            BrightnessControl(
+                                brightness = brightness,
+                                userPreferencesManager,
+                                mqttLinking,
+                                flag = flag.value
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
