@@ -191,6 +191,7 @@ class MqttLinking(context: Context) {
                 "color" -> userPreferencesManager.updateUserPreferences(color = value as String)
                 "sceneMode" -> userPreferencesManager.updateUserPreferences(sceneMode = value as String)
                 "operationMode" -> userPreferencesManager.updateUserPreferences(operationMode = value as String)
+                "part" -> userPreferencesManager.updateUserPreferences(part = value as Boolean)
             }
         }
     }
@@ -232,6 +233,15 @@ class MqttLinking(context: Context) {
                     sendData("operationMode", userPreferencesManager = userPreferencesManager)
                 }
                 Log.d("Operation Mode Selection", "操作模式已调整为 $updateValue")
+            }
+
+            "part" -> {
+                var updateValue = data as? Boolean
+                mutex.withLock {
+                    userPreferencesManager.updateUserPreferences(part = updateValue)
+                    sendData("part", userPreferencesManager = userPreferencesManager)
+                }
+                Log.d("Part Selection", "光效模式已调整为 ${ when (updateValue) { false -> "情景" true -> "颜色亮度" null -> "" } }")
             }
         }
     }

@@ -18,8 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.lightingadjustment.datamanagement.UserPreferencesManager
 import androidx.compose.ui.res.colorResource
 import com.example.lightingadjustment.mqtt.MqttLinking
-import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 
@@ -43,9 +43,11 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
 
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
+    val mutex = remember { Mutex() }
 
     // Retrieve configuration settings when the page is launched
     LaunchedEffect(Unit) {
+        pagerState.scrollToPage((userPreferencesManager.getUserPreferences("part")["part"] as? Boolean) ?.let { if(it) 1 else 0 } ?: 0)
         brightness.floatValue = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
         selectedColor.value = when (userPreferencesManager.getUserPreferences("color")["color"] as String) {
             "night" -> colors[0]
@@ -123,6 +125,8 @@ fun ThirdScreen(userPreferencesManager: UserPreferencesManager,
                         onClick = {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(index)
+                                val data = (index != 0)
+                                mqttLinking.updateAndSend(mutex, userPreferencesManager, "part", data)
                             }
                         }
                     )

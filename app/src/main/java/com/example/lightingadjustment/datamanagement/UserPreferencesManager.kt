@@ -22,6 +22,7 @@ class UserPreferencesManager(context: Context) {
                 .setColor("white")
                 .setOperationMode("manualMode")
                 .setInitialized(true)
+                .setPart(false)
                 .build()
         }
     }
@@ -36,6 +37,7 @@ class UserPreferencesManager(context: Context) {
                 "color" -> "color" to preferences.color
                 "sceneMode" -> "sceneMode" to preferences.sceneMode
                 "operationMode" -> "operationMode" to preferences.operationMode
+                "part" -> "part" to preferences.part
                 else -> null
             }
         }.toMap()
@@ -46,7 +48,8 @@ class UserPreferencesManager(context: Context) {
                                       brightness: Float? = null,
                                       color: String? = null,
                                       sceneMode: String? = null,
-                                      operationMode: String? = null) {
+                                      operationMode: String? = null,
+                                      part: Boolean?= null) {
         dataStore.updateData { preferences ->
             preferences.toBuilder().apply {
                 initialized?.let{ setInitialized(initialized) }
@@ -54,6 +57,7 @@ class UserPreferencesManager(context: Context) {
                 color?.let { setColor(color) }
                 sceneMode?. let{ setSceneMode(sceneMode) }
                 operationMode?.let{ setOperationMode(operationMode) }
+                part?.let{ setPart(part) }
             }.build()
         }
     }

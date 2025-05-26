@@ -8,4 +8,5 @@ message UserPreferences {
   string color = 3;
   string scene_mode = 4;
   string operation_mode = 5;
+  bool part = 6;
 }

@@ -1,5 +1,6 @@
 [versions]
-agp = "8.9.2"
+accompanistPager = "0.32.0"
+agp = "8.10.0"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -7,14 +8,16 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.7.0"
 material = "1.12.0"
-lifecycleRuntimeKtx = "2.8.7"
+lifecycleRuntimeKtx = "2.9.0"
 activityCompose = "1.10.1"
-composeBom = "2025.04.01"
+composeBom = "2025.05.01"
 material3 = "1.3.2"
-navigationCompose = "2.8.9"
+navigationCompose = "2.9.0"
 protobufKotlinLite = "3.21.11"
 
 [libraries]
+accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
+accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -35,10 +38,10 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 paho-mqtt-service = { module = "io.github.mayzs:paho.mqtt.android", version = "1.2.1" }
 paho-mqtt-client = { module = "org.eclipse.paho:org.eclipse.paho.client.mqttv3", version = "1.2.5" }
-androidx-datastore = { module = "androidx.datastore:datastore", version = "1.1.5" }
+androidx-datastore = { module = "androidx.datastore:datastore", version = "1.1.7" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version = "3.21.12" }
 protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufKotlinLite" }
-gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
+gson = { module = "com.google.code.gson:gson", version = "2.11.0" }
 androidx-localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version = "1.1.0" }
 
 [plugins]
