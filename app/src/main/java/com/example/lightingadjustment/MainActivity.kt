@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
         mqttLinking.connect(this) {}
 
-        mqttLinking.subscribe("bedroom/lighting") { message ->
+        mqttLinking.subscribe("light/livingroom") { message ->
             lifecycleScope.launch { mqttLinking.handleReceivedData(message, userPreferencesManager) }
         }
 

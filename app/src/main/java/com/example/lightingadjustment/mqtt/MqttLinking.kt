@@ -131,7 +131,7 @@ class MqttLinking(context: Context) {
     suspend fun sendData(vararg fields: String, userPreferencesManager: UserPreferencesManager) {
         val data = userPreferencesManager.getUserPreferences(*fields)
         val jsonData = Gson().toJson(data)
-        sendMessage("bedroom/lighting", jsonData)
+        sendMessage("light/livingroom", jsonData)
     }
 
     // MQTT | Subscribe the required topic and add the failed subscriptions to pending list
