@@ -73,7 +73,7 @@ fun HomeScreen(navController: NavHostController) {
                     visualTransformation = PasswordVisualTransformation()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = { navController.navigate("third") }) {
+                Button(onClick = { navController.navigate("room") }) {
                     Text("登录", fontFamily = loadCustomFont())
                 }
                 Spacer(modifier = Modifier.height(16.dp))

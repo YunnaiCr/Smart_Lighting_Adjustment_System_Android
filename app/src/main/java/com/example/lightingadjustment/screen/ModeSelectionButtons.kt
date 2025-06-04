@@ -16,7 +16,6 @@ import kotlinx.coroutines.sync.Mutex
 
 @Composable
 fun ModeSelectionButtons(
-    flag: Boolean,
     userPreferencesManager: UserPreferencesManager,
     mqttLinking: MqttLinking,
     selectedMode: MutableState<String?>
@@ -24,9 +23,6 @@ fun ModeSelectionButtons(
     val scope = rememberCoroutineScope()
     val mutex = remember { Mutex() }
 
-    if (!flag) {
-        return
-    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),

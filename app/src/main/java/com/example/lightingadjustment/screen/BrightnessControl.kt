@@ -16,12 +16,9 @@ import kotlinx.coroutines.sync.*
 fun BrightnessControl(
     brightness: MutableState<Float>,
     userPreferencesManager: UserPreferencesManager,
-    mqttLinking: MqttLinking,
-    flag: Boolean
+    mqttLinking: MqttLinking
 ) {
-    if (!flag) {
-        return
-    }
+
 
     val step = 1f  // 步长设置为 1
     val steps = 3  // 0到6之间有7个步长（ 1, 2, 3, 4, 5）

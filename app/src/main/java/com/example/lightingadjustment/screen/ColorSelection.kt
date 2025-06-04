@@ -18,13 +18,10 @@ import kotlinx.coroutines.sync.Mutex
 fun ColorSelection(
     colors: List<Color>,
     selectedColor: MutableState<Color>,
-    flag: Boolean,
     userPreferencesManager: UserPreferencesManager,
     mqttLinking: MqttLinking
 ) {
-    if (!flag) {
-        return
-    }
+
 
     val scope = rememberCoroutineScope()
     val mutex = remember { Mutex() }
