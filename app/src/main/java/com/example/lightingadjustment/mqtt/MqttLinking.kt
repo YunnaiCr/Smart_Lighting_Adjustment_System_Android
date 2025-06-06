@@ -182,6 +182,11 @@ class MqttLinking(context: Context) {
 
     // Convert received Json data to Map
     suspend fun handleReceivedData(message: String, userPreferencesManager: UserPreferencesManager) {
+        if (message.isBlank() || message == "null") {
+            Log.w(tag, "Received empty or null message, ignore.")
+            return
+        }
+
         val type = object : TypeToken<Map<String, Any>>() {}.type
         val data = Gson().fromJson<Map<String, Any>>(message, type)
         Log.d(tag, "Json to Map, Handled data: $data")
