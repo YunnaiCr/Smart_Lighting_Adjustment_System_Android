@@ -12,6 +12,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
@@ -104,7 +106,7 @@ fun ThirdScreen(navController: NavHostController, roomId: String) {
             contentDescription = "Main Interface",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
-        )//set background
+        )
 
 
         Column(
@@ -149,6 +151,45 @@ fun ThirdScreen(navController: NavHostController, roomId: String) {
                     mqttLinking
                 )
             }
+
+            if (voiceMode.value) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val voiceCommands = listOf(
+                        "打开厨房灯", "关闭厨房灯",
+                        "打开客厅灯", "关闭客厅灯",
+                        "厨房灯调亮", "厨房灯调暗",
+                        "客厅灯调亮", "客厅灯调暗",
+                        "客厅柔光灯",
+                        "打开阅读模式", "关闭阅读模式",
+                        "打开睡眠模式", "关闭睡眠模式",
+                        "声音调小", "声音调大",
+                        "静音", "取消静音",
+                        "打开自动模式", "打开手动模式"
+                    )
+                    items(voiceCommands) { command ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0x33000000), shape = MaterialTheme.shapes.medium) // 半透明深色背景
+                                .padding(vertical = 12.dp, horizontal = 16.dp)
+                        ) {
+                            Text(
+                                text = command,
+                                fontSize = 18.sp,
+                                fontFamily = loadCustomFont(),
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+
             if(flag.value)
             {
                 // Tab buttons
