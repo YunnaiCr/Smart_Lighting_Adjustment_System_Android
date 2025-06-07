@@ -22,7 +22,11 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import kotlinx.coroutines.sync.*
 
-class MqttLinking(context: Context) {
+object  AppServices {
+    fun mqtt(context: Context) = MqttLinking.getInstance(context)
+}
+
+class MqttLinking private constructor(context: Context) {
     private val broker = "ssl://jfe2a84f.ala.cn-hangzhou.emqxsl.cn:8883"
     private val clientID = "Android-Client"
     private val username = "Yunnai"
@@ -34,12 +38,20 @@ class MqttLinking(context: Context) {
     private val subscriptionCallbacks = mutableMapOf<String, (String) -> Unit>()
     private val isSubscribed = mutableMapOf<String, Boolean>()
 
+    companion object {
+        @Volatile
+        private var instance: MqttLinking? = null
 
+        fun getInstance(context: Context): MqttLinking {
+            return instance?: synchronized (this) {
+                instance?: MqttLinking(context.applicationContext).also { instance = it }
+            }
+        }
+    }
 
     // Create a MQTT carrier
     private val mqttClient: MqttAndroidClient = MqttAndroidClient(context, broker, clientID).apply {
         setCallback(object : MqttCallback {
-            //
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 val payload = message?.payload?.takeIf { it.isNotEmpty() }?.toString(Charsets.UTF_8)?: ""
                 Log.d(tag, "Received: $payload")

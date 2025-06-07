@@ -1,5 +1,7 @@
 package com.example.lightingadjustment.screen
 
+import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,7 +23,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
@@ -35,16 +36,19 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
-
+import androidx.lifecycle.AndroidViewModel
 
 
 // DataStore 属性
 private val Context.dataStore by preferencesDataStore(name = "room_prefs")
 
-class RoomSelectionViewModel(private val context: Context) : ViewModel() {
+class RoomSelectionViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val ROOM1_KEY = stringPreferencesKey("room1_name")
-    private val ROOM2_KEY = stringPreferencesKey("room2_name")
+    @SuppressLint("StaticFieldLeak")
+    private val context = application.applicationContext
+
+    private val room1Key = stringPreferencesKey("room1_name")
+    private val room2Key = stringPreferencesKey("room2_name")
 
     private val _room1Name = MutableStateFlow("房间1")
     val room1Name: StateFlow<String> = _room1Name
@@ -56,8 +60,8 @@ class RoomSelectionViewModel(private val context: Context) : ViewModel() {
         // 从 DataStore 读取初始数据
         viewModelScope.launch {
             val prefs = context.dataStore.data.first()
-            _room1Name.value = prefs[ROOM1_KEY] ?: "房间1"
-            _room2Name.value = prefs[ROOM2_KEY] ?: "房间2"
+            _room1Name.value = prefs[room1Key] ?: "房间1"
+            _room2Name.value = prefs[room2Key] ?: "房间2"
         }
     }
 
@@ -66,11 +70,11 @@ class RoomSelectionViewModel(private val context: Context) : ViewModel() {
             context.dataStore.edit { prefs ->
                 when(roomNumber) {
                     1 -> {
-                        prefs[ROOM1_KEY] = newName
+                        prefs[room1Key] = newName
                         _room1Name.value = newName
                     }
                     2 -> {
-                        prefs[ROOM2_KEY] = newName
+                        prefs[room2Key] = newName
                         _room2Name.value = newName
                     }
                 }
@@ -79,30 +83,19 @@ class RoomSelectionViewModel(private val context: Context) : ViewModel() {
     }
 }
 
-class RoomSelectionViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if(modelClass.isAssignableFrom(RoomSelectionViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return RoomSelectionViewModel(context) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
 @Composable
 fun RoomSelectionScreen(
-    navController: NavHostController,
-    context: Context = LocalContext.current
+    navController: NavHostController
 ) {
     val viewModel: RoomSelectionViewModel = viewModel(
-        factory = RoomSelectionViewModelFactory(context)
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(LocalContext.current.applicationContext as Application)
     )
 
     val room1Name by viewModel.room1Name.collectAsState()
     val room2Name by viewModel.room2Name.collectAsState()
 
     var renameDialogVisible by remember { mutableStateOf(false) }
-    var renameTargetRoom by remember { mutableStateOf(0) }
+    var renameTargetRoom by remember { mutableIntStateOf(0) }
     var renameText by remember { mutableStateOf(TextFieldValue("")) }
 
     if (renameDialogVisible) {
@@ -140,7 +133,7 @@ fun RoomSelectionScreen(
     ) {
         // 背景图
         Image(
-            painter = painterResource(id = R.drawable.background1), // 替换为你的背景图资源
+            painter = painterResource(id = R.drawable.background1),
             contentDescription = "背景图",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -184,7 +177,7 @@ fun RoomSelectionScreen(
                 RoomCard(
                     roomName = room1Name,
                     backgroundRes = R.drawable.background2,
-                    onClick = { navController.navigate("third") },
+                    onClick = { navController.navigate("third/room1") },
                     onLongClick = {
                         renameTargetRoom = 1
                         renameText = TextFieldValue(room1Name)
@@ -194,7 +187,7 @@ fun RoomSelectionScreen(
                 RoomCard(
                     roomName = room2Name,
                     backgroundRes = R.drawable.background7,
-                    onClick = { navController.navigate("third") },
+                    onClick = { navController.navigate("third/room2") },
                     onLongClick = {
                         renameTargetRoom = 2
                         renameText = TextFieldValue(room2Name)

@@ -2,18 +2,53 @@ package com.example.lightingadjustment.datamanagement
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
+import androidx.datastore.core.DataStoreFactory
 import com.example.lightingadjustment.proto.UserPreferences
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import java.io.File
 
-private val Context.userPreferencesDataStore: DataStore<UserPreferences> by dataStore(
-    fileName = "user_preferences.pb",
-    serializer = UserPreferencesSerializer
+// Get corresponding data store.
+private val dataStoreCache = mutableMapOf<String, DataStore<UserPreferences>>()
+
+fun Context.userPreferencesDataStore(fileName: String): DataStore<UserPreferences> {
+    return dataStoreCache.getOrPut(fileName) {
+        DataStoreFactory.create (
+            produceFile = { File(this.filesDir, fileName) },
+            serializer = UserPreferencesSerializer
+        )
+    }
+}
+
+// Get corresponding preference.
+object UserPreferencesRepository {
+    private val managerMap = mutableMapOf<String, UserPreferencesManager>()
+
+    fun getManager(context: Context, fileName: String): UserPreferencesManager {
+        return managerMap.getOrPut(fileName) {
+            UserPreferencesManager(context.applicationContext, fileName)
+        }
+    }
+    /*
+    fun clearAll() {
+        managerMap.clear()
+    }
+    */
+}
+
+// Data extracted from the corresponding data store.
+data class TempUserPreferences(
+    val brightness: Float,
+    val color: String,
+    val sceneMode: String,
+    val operationMode: String,
+    val part: Boolean
 )
 
 // A class convenient for data management
-class UserPreferencesManager(context: Context) {
-    private val dataStore = context.userPreferencesDataStore
+class UserPreferencesManager(context: Context, fileName: String) {
+    private val dataStore = context.userPreferencesDataStore(fileName)
 
     suspend fun initialize() {
         dataStore.updateData { preferences ->
@@ -23,6 +58,7 @@ class UserPreferencesManager(context: Context) {
                 .setOperationMode("manualMode")
                 .setInitialized(true)
                 .setPart(false)
+                .setSceneMode("Sleeping")
                 .build()
         }
     }
@@ -66,4 +102,16 @@ class UserPreferencesManager(context: Context) {
     suspend fun isInitialized(): Boolean {
         return getUserPreferences("initialized")["initialized"] as Boolean
     }
+
+    // Monitor the data displayed on pages.
+    val preferencesFlow: Flow<TempUserPreferences> = dataStore.data
+        .map { prefs ->
+            TempUserPreferences(
+                brightness = prefs.brightness,
+                color = prefs.color ?: "white",
+                sceneMode = prefs.sceneMode ?: "Sleeping",
+                operationMode = prefs.operationMode ?: "manualMode",
+                part = prefs.part
+            )
+        }
 }

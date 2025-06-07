@@ -21,8 +21,6 @@ fun ColorSelection(
     userPreferencesManager: UserPreferencesManager,
     mqttLinking: MqttLinking
 ) {
-
-
     val scope = rememberCoroutineScope()
     val mutex = remember { Mutex() }
 

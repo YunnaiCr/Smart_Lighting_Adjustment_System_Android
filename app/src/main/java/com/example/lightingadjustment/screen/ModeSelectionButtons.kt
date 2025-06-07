@@ -18,11 +18,11 @@ import kotlinx.coroutines.sync.Mutex
 fun ModeSelectionButtons(
     userPreferencesManager: UserPreferencesManager,
     mqttLinking: MqttLinking,
-    selectedMode: MutableState<String?>
+    changedSelectedMode: String
     ) {
     val scope = rememberCoroutineScope()
     val mutex = remember { Mutex() }
-
+    var selectedMode = changedSelectedMode
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -31,14 +31,14 @@ fun ModeSelectionButtons(
 
         Button(
             onClick = {
-                selectedMode.value = "Reading"
+                selectedMode = "Reading"
                 scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "sceneMode", "Reading") }
             },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .padding(8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedMode.value == "Reading") Color.Black else Color.Gray
+                containerColor = if (selectedMode == "Reading") Color.Black else Color.Gray
             )
         ) {
             Text("阅读模式", fontFamily = loadCustomFont())
@@ -48,14 +48,14 @@ fun ModeSelectionButtons(
 
         Button(
             onClick = {
-                selectedMode.value = "Sleeping"
+                selectedMode = "Sleeping"
                 scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "sceneMode", "Sleeping") }
             },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .padding(8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedMode.value == "Sleeping") Color.Black else Color.Gray
+                containerColor = if (selectedMode == "Sleeping") Color.Black else Color.Gray
             )
         ) {
             Text("睡眠模式", fontFamily = loadCustomFont())
@@ -65,14 +65,14 @@ fun ModeSelectionButtons(
 
         Button(
             onClick = {
-                selectedMode.value = "Film"
+                selectedMode = "Film"
                 scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "sceneMode", "Film") }
             },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .padding(8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedMode.value == "Film") Color.Black else Color.Gray
+                containerColor = if (selectedMode == "Film") Color.Black else Color.Gray
             )
         ) {
             Text("影视模式", fontFamily = loadCustomFont())
@@ -82,14 +82,14 @@ fun ModeSelectionButtons(
 
         Button(
             onClick = {
-                selectedMode.value = "Party"
+                selectedMode = "Party"
                 scope.launch { mqttLinking.updateAndSend(mutex, userPreferencesManager, "sceneMode", "Party") }
             },
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .padding(8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedMode.value == "Party") Color.Black else Color.Gray
+                containerColor = if (selectedMode == "Party") Color.Black else Color.Gray
             )
         ) {
             Text("聚会模式", fontFamily = loadCustomFont())

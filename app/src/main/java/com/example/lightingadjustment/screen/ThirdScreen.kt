@@ -15,24 +15,27 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
-import com.example.lightingadjustment.datamanagement.UserPreferencesManager
+import com.example.lightingadjustment.datamanagement.*
 import androidx.compose.ui.res.colorResource
-import com.example.lightingadjustment.mqtt.MqttLinking
+import com.example.lightingadjustment.mqtt.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 
 
 @Composable
-fun ThirdScreen(navController: NavHostController,
-                userPreferencesManager: UserPreferencesManager,
-                mqttLinking: MqttLinking) {
-    var brightness = remember { mutableFloatStateOf(1.0f) }
-    var selectedMode = remember { mutableStateOf<String?>(null) }
-    var selectedColor = remember { mutableStateOf(Color.White) }
+fun ThirdScreen(navController: NavHostController, roomId: String) {
+    val context = LocalContext.current.applicationContext
+    val userPreferencesManager = UserPreferencesRepository.getManager(context, roomId)
+    val mqttLinking = AppServices.mqtt(context)
+    val preferences by userPreferencesManager.preferencesFlow.collectAsState(initial = TempUserPreferences(1.0f, "white", "Sleeping", "manualMode", false))
 
+    val brightness = preferences.brightness
+    val selectedMode = preferences.sceneMode
+    val selectedColor = remember { mutableStateOf(Color.White) }
     val colors = listOf(
         colorResource(R.color.night),
         colorResource(R.color.warm),
@@ -48,32 +51,50 @@ fun ThirdScreen(navController: NavHostController,
     val coroutineScope = rememberCoroutineScope()
     val mutex = remember { Mutex() }
 
-    // Retrieve configuration settings when the page is launched
-    LaunchedEffect(Unit) {
-        pagerState.scrollToPage((userPreferencesManager.getUserPreferences("part")["part"] as? Boolean) ?.let { if(it) 1 else 0 } ?: 0)
-        brightness.floatValue = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
-        selectedColor.value = when (userPreferencesManager.getUserPreferences("color")["color"] as String) {
+    LaunchedEffect(preferences.operationMode) {
+        when (preferences.operationMode) {
+            "autoMode" -> {
+                autoMode.value = true
+                manualMode.value = false
+                voiceMode.value = false
+                flag.value = false
+            }
+            "manualMode" -> {
+                autoMode.value = false
+                manualMode.value = true
+                voiceMode.value = false
+                flag.value = true
+            }
+            "voiceMode" -> {
+                autoMode.value = false
+                manualMode.value = false
+                voiceMode.value = true
+                flag.value = false
+            }
+            else -> {
+                autoMode.value = false
+                manualMode.value = true
+                voiceMode.value = false
+                flag.value = true
+            }
+        }
+    }
+
+    LaunchedEffect(preferences.part) {
+        if (preferences.operationMode == "manualMode") {
+            when (preferences.part) {
+                false -> pagerState.scrollToPage(0)
+                true -> pagerState.scrollToPage(1)
+            }
+        }
+    }
+
+    LaunchedEffect(preferences.color) {
+        selectedColor.value = when (preferences.color) {
             "night" -> colors[0]
             "warm" -> colors[1]
             "white" -> colors[2]
             else -> colors[2]
-        }
-        when (userPreferencesManager.getUserPreferences("operationMode")["operationMode"] as String) {
-            "autoMode" -> { autoMode.value = true; manualMode.value = false; voiceMode.value = false }
-            "manualMode" -> { autoMode.value = false; manualMode.value = true; voiceMode.value = false; flag.value = true }
-            "voiceMode" -> { autoMode.value = false; manualMode.value = false; voiceMode.value = true }
-            else -> { autoMode.value = false; manualMode.value = true; voiceMode.value = false; flag.value = true }
-        }
-        selectedMode.value = userPreferencesManager.getUserPreferences("sceneMode")["sceneMode"] as String
-    }
-
-    // Disable control in non manual mode
-    LaunchedEffect(manualMode.value) {
-        if (manualMode.value) {
-            flag.value = true
-            brightness.floatValue = userPreferencesManager.getUserPreferences("brightness")["brightness"] as Float
-        } else {
-            flag.value = false
         }
     }
 
@@ -151,7 +172,6 @@ fun ThirdScreen(navController: NavHostController,
                     }
                 }
 
-                // Pager: Page 0 = ModeSelectionButtons，Page 1 = ColorSelection + BrightnessControl
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize()
@@ -179,7 +199,7 @@ fun ThirdScreen(navController: NavHostController,
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 BrightnessControl(
-                                    brightness = brightness,
+                                    changedBrightness = brightness,
                                     userPreferencesManager,
                                     mqttLinking
                                 )
