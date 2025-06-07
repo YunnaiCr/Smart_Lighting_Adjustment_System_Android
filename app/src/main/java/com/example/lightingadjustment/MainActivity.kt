@@ -1,7 +1,6 @@
 package com.example.lightingadjustment
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
@@ -36,15 +35,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        mqttLinking.connect(this) {}
-
-        mqttLinking.subscribe("light/livingroom") { message ->
-            lifecycleScope.launch { mqttLinking.handleReceivedData(message, userPreferencesManager) }
+        mqttLinking.connect(this) {
+            mqttLinking.sendMessage("light/livingroom/esp/status", "sync")
         }
 
-        lifecycleScope.launch {
-            mqttLinking.sendData("initialized", userPreferencesManager = userPreferencesManager)
-            Log.d("test", "test the linking.")
+        mqttLinking.subscribe("light/livingroom/app/status") { message ->
+            lifecycleScope.launch { mqttLinking.handleReceivedSign(message, userPreferencesManager) }
+        }
+        mqttLinking.subscribe("light/livingroom/app") { message ->
+            lifecycleScope.launch { mqttLinking.handleReceivedData(message, userPreferencesManager) }
         }
     }
 

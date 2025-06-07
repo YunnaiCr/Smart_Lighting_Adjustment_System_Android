@@ -30,7 +30,7 @@ class MqttLinking(context: Context) {
     private val tag = "MQTT"
 
     private val pendingSubscriptions = mutableSetOf<String>()
-    private val pendingMessages = mutableMapOf<String, MutableList<String>>()
+    //private val pendingMessages = mutableMapOf<String, MutableList<String>>()
     private val subscriptionCallbacks = mutableMapOf<String, (String) -> Unit>()
     private val isSubscribed = mutableMapOf<String, Boolean>()
 
@@ -107,6 +107,12 @@ class MqttLinking(context: Context) {
         mqttClient.disconnect()
     }
 
+    fun sendMessage(topic: String, payload: String) {
+        val message = MqttMessage(payload.toByteArray()).apply { qos = 1 }
+        mqttClient.publish(topic, message)
+        Log.d(tag, "message published: $message")
+    }
+    /* test functions
     // MQTT | Send message to the corresponding topic subscriber
     fun sendMessage(topic: String, payload: String) {
         if (isSubscribed[topic] == true) {
@@ -126,7 +132,7 @@ class MqttLinking(context: Context) {
         }
         pendingMessages.remove(topic)
     }
-
+    */
     // Send data by any field
     suspend fun sendData(vararg fields: String, userPreferencesManager: UserPreferencesManager) {
         val data = userPreferencesManager.getUserPreferences(*fields)
@@ -143,7 +149,7 @@ class MqttLinking(context: Context) {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
                     Log.d(tag, "Successfully subscribed to $topic")
                     isSubscribed[topic] = true
-                    resolvePendingMessages(topic)
+                    //resolvePendingMessages(topic)
                     }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
@@ -161,15 +167,14 @@ class MqttLinking(context: Context) {
     private fun retryPendingSubscriptions() {
         if (pendingSubscriptions.isNotEmpty()) {
             Log.d(tag, "Retrying pending subscriptions...")
-            val iterator = pendingSubscriptions.iterator()
-            while (iterator.hasNext()) {
-                val topic = iterator.next()
+            val topicsToRetry = pendingSubscriptions.toList()
+            for (topic in topicsToRetry) {
                 mqttClient.subscribe(topic, 1, null, object : IMqttActionListener {
                     override fun onSuccess(asyncActionToken: IMqttToken?) {
                         Log.d(tag, "Successfully subscribed to $topic")
                         isSubscribed[topic] = true
-                        resolvePendingMessages(topic)
-                        iterator.remove()
+                        //resolvePendingMessages(topic)
+                        pendingSubscriptions.remove(topic)
                     }
 
                         override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
@@ -180,7 +185,7 @@ class MqttLinking(context: Context) {
         }
     }
 
-    // Convert received Json data to Map
+    // Convert received Json to Map and save the data.
     suspend fun handleReceivedData(message: String, userPreferencesManager: UserPreferencesManager) {
         if (message.isBlank() || message == "null") {
             Log.w(tag, "Received empty or null message, ignore.")
@@ -198,6 +203,14 @@ class MqttLinking(context: Context) {
                 "operationMode" -> userPreferencesManager.updateUserPreferences(operationMode = value as String)
                 "part" -> userPreferencesManager.updateUserPreferences(part = value as Boolean)
             }
+        }
+    }
+
+    // Detect synchronization sign from the message, then send a full-data json.
+    suspend fun handleReceivedSign(message: String, userPreferencesManager: UserPreferencesManager) {
+        if (message.equals("sync", ignoreCase = true))
+        {
+            sendData("brightness", "color", "sceneMode", "operationMode", "part", userPreferencesManager = userPreferencesManager)
         }
     }
 
