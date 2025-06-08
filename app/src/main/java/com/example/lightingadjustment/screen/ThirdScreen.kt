@@ -161,6 +161,7 @@ fun ThirdScreen(navController: NavHostController, roomId: String) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val voiceCommands = listOf(
+                        "唤醒词：准备开灯",
                         "打开厨房灯", "关闭厨房灯",
                         "打开客厅灯", "关闭客厅灯",
                         "厨房灯调亮", "厨房灯调暗",
