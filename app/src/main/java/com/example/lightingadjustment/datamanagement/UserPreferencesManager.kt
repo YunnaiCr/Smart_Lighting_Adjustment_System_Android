@@ -47,7 +47,7 @@ data class TempUserPreferences(
 )
 
 // A class convenient for data management
-class UserPreferencesManager(context: Context, fileName: String) {
+class UserPreferencesManager(context: Context, val fileName: String) {
     private val dataStore = context.userPreferencesDataStore(fileName)
 
     suspend fun initialize() {

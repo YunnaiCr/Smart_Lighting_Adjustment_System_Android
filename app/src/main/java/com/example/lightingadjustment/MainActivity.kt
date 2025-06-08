@@ -48,10 +48,10 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch { mqttLinking.handleReceivedSign(message, room1Manager) }
         }
         mqttLinking.subscribe("light/room1/app") { message ->
-            lifecycleScope.launch { mqttLinking.handleReceivedData(message, room2Manager) }
+            lifecycleScope.launch { mqttLinking.handleReceivedData(message, room1Manager) }
         }
         mqttLinking.subscribe("light/room2/app/status") { message ->
-            lifecycleScope.launch { mqttLinking.handleReceivedSign(message, room1Manager) }
+            lifecycleScope.launch { mqttLinking.handleReceivedSign(message, room2Manager) }
         }
         mqttLinking.subscribe("light/room2/app") { message ->
             lifecycleScope.launch { mqttLinking.handleReceivedData(message, room2Manager) }

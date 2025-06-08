@@ -146,10 +146,10 @@ class MqttLinking private constructor(context: Context) {
     }
     */
     // Send data by any field
-    suspend fun sendData(vararg fields: String, userPreferencesManager: UserPreferencesManager) {
+    suspend fun sendData(vararg fields: String, userPreferencesManager: UserPreferencesManager, roomName: String) {
         val data = userPreferencesManager.getUserPreferences(*fields)
         val jsonData = Gson().toJson(data)
-        sendMessage("light/livingroom", jsonData)
+        sendMessage("light/$roomName/esp", jsonData)
     }
 
     // MQTT | Subscribe the required topic and add the failed subscriptions to pending list
@@ -206,14 +206,14 @@ class MqttLinking private constructor(context: Context) {
 
         val type = object : TypeToken<Map<String, Any>>() {}.type
         val data = Gson().fromJson<Map<String, Any>>(message, type)
-        Log.d(tag, "Json to Map, Handled data: $data")
+        Log.d(tag, "${userPreferencesManager.fileName} Json to Map, Handled data: $data")
         for ((key, value) in data) {
             when (key) {
-                "brightness" -> userPreferencesManager.updateUserPreferences(brightness = (value as Double).toFloat())
-                "color" -> userPreferencesManager.updateUserPreferences(color = value as String)
-                "sceneMode" -> userPreferencesManager.updateUserPreferences(sceneMode = value as String)
-                "operationMode" -> userPreferencesManager.updateUserPreferences(operationMode = value as String)
-                "part" -> userPreferencesManager.updateUserPreferences(part = value as Boolean)
+                "brightness" -> (value as? Double)?.let { userPreferencesManager.updateUserPreferences(brightness = it.toFloat()) }
+                "color" -> (value as? String)?.let { userPreferencesManager.updateUserPreferences(color = it) }
+                "sceneMode" -> (value as? String)?.let { userPreferencesManager.updateUserPreferences(sceneMode = it) }
+                "operationMode" -> (value as? String)?.let { userPreferencesManager.updateUserPreferences(operationMode = it) }
+                "part" -> (value as? Boolean)?.let { userPreferencesManager.updateUserPreferences(part = it) }
             }
         }
     }
@@ -222,7 +222,11 @@ class MqttLinking private constructor(context: Context) {
     suspend fun handleReceivedSign(message: String, userPreferencesManager: UserPreferencesManager) {
         if (message.equals("sync", ignoreCase = true))
         {
-            sendData("brightness", "color", "sceneMode", "operationMode", "part", userPreferencesManager = userPreferencesManager)
+            sendData(
+                "brightness", "color", "sceneMode", "operationMode", "part",
+                userPreferencesManager = userPreferencesManager,
+                roomName = userPreferencesManager.fileName
+            )
         }
     }
 
@@ -233,7 +237,7 @@ class MqttLinking private constructor(context: Context) {
                 var updateValue = data as? Float
                 mutex.withLock {
                     userPreferencesManager.updateUserPreferences(brightness = updateValue)
-                    sendData("brightness", userPreferencesManager = userPreferencesManager)
+                    sendData("brightness", userPreferencesManager = userPreferencesManager, roomName = userPreferencesManager.fileName)
                 }
                 Log.d("Brightness Control", "亮度已调整为 $updateValue")
             }
@@ -242,7 +246,7 @@ class MqttLinking private constructor(context: Context) {
                 var updateValue = data as? String
                 mutex.withLock {
                     userPreferencesManager.updateUserPreferences(sceneMode = updateValue)
-                    sendData("sceneMode", userPreferencesManager = userPreferencesManager)
+                    sendData("sceneMode", userPreferencesManager = userPreferencesManager, roomName = userPreferencesManager.fileName)
                 }
                 Log.d("Scene Mode Selection", "情景模式已调整为 $updateValue")
             }
@@ -251,7 +255,7 @@ class MqttLinking private constructor(context: Context) {
                 var updateValue = data as? String
                 mutex.withLock {
                     userPreferencesManager.updateUserPreferences(color = updateValue)
-                    sendData("color", userPreferencesManager = userPreferencesManager)
+                    sendData("color", userPreferencesManager = userPreferencesManager, roomName = userPreferencesManager.fileName)
                 }
                 Log.d("Color Selection", "颜色已调整为 $updateValue")
             }
@@ -260,7 +264,7 @@ class MqttLinking private constructor(context: Context) {
                 var updateValue = data as? String
                 mutex.withLock {
                     userPreferencesManager.updateUserPreferences(operationMode = updateValue)
-                    sendData("operationMode", userPreferencesManager = userPreferencesManager)
+                    sendData("operationMode", userPreferencesManager = userPreferencesManager, roomName = userPreferencesManager.fileName)
                 }
                 Log.d("Operation Mode Selection", "操作模式已调整为 $updateValue")
             }
@@ -269,7 +273,7 @@ class MqttLinking private constructor(context: Context) {
                 var updateValue = data as? Boolean
                 mutex.withLock {
                     userPreferencesManager.updateUserPreferences(part = updateValue)
-                    sendData("part", userPreferencesManager = userPreferencesManager)
+                    sendData("part", userPreferencesManager = userPreferencesManager, roomName = userPreferencesManager.fileName)
                 }
                 Log.d("Part Selection", "光效模式已调整为 ${ when (updateValue) { false -> "情景" true -> "颜色亮度" null -> "" } }")
             }
