@@ -22,5 +22,6 @@ fun AppNavigation() {
             ThirdScreen(navController, roomId)
         }
         composable("room") { RoomSelectionScreen(navController) }
+        composable("register") { RegisterScreen(navController) }
     }
 }
